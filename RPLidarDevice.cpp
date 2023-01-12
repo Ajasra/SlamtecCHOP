@@ -1,4 +1,4 @@
-﻿#include "RPLidar.h"
+﻿#include "RPLidarDevice.h"
 
 // create the class and constructors
 

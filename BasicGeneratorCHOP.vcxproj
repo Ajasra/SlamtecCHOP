@@ -154,7 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="RPLidar.h" />
+    <ClInclude Include="RPLidarDevice.h" />
     <ClInclude Include="SlamtecCHOP.h" />
     <ClInclude Include="CHOP_CPlusPlusBase.h" />
     <ClInclude Include="CPlusPlus_Common.h" />

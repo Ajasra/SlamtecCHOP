@@ -18,7 +18,7 @@
 #include "CHOP_CPlusPlusBase.h"
 #include "Parameters.h"
 
-#include "RPLidar.h"
+#include "RPLidarDevice.h"
 
 // #include "rplidar_sdk/sdk/include/sl_lidar.h"
 // #include "rplidar_sdk/sdk/include/sl_lidar_driver.h"
