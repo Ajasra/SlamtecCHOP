@@ -1,0 +1,86 @@
+﻿  net_serial.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_serial.cpp(154,7): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_serial.cpp(167,7): warning C4267: 'argument': conversion from 'size_t' to 'DWORD', possible loss of data
+  net_socket.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(238,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(243,47): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(514,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(533,1): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(629,38): warning C4244: 'argument': conversion from 'SOCKET' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(888,19): warning C4244: 'initializing': conversion from 'SOCKET' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\net_socket.cpp(902,19): warning C4244: 'initializing': conversion from 'SOCKET' to 'int', possible loss of data
+  timer.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+  thread.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(53,8): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(55,59): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(88,5): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(98,80): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(129,12): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\arch\win32\winthread.hpp(132,59): warning C4312: 'reinterpret_cast': conversion from '_word_size_t' to 'HANDLE' of greater size
+  rplidar_driver.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+  sl_crc.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+  sl_lidar_driver.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(647,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(682,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(876,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(1001,1): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(1082,34): warning C4244: 'argument': conversion from 'sl_u16' to '_Ty', possible loss of data
+          with
+          [
+              _Ty=sl_u8
+          ]
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(1091,1): warning C4267: 'initializing': conversion from 'size_t' to 'sl_u8', possible loss of data
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_lidar_driver.cpp(1071,19): warning C4101: 'pkt_header': unreferenced local variable
+  sl_serial_channel.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_serial_channel.cpp(95,1): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  sl_tcp_channel.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_tcp_channel.cpp(57,16): warning C4806: '&': unsafe operation: no value of type 'bool' promoted to type 'unsigned int' can equal the given constant
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_tcp_channel.cpp(90,1): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  sl_udp_channel.cpp
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_protocol.h(58,11): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): warning C4200: nonstandard extension used: zero-sized array in struct/union
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\include\sl_lidar_cmd.h(295,12): message : This member will be ignored by a defaulted constructor or copy/move assignment operator
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_udp_channel.cpp(56,16): warning C4806: '&': unsafe operation: no value of type 'bool' promoted to type 'unsigned int' can equal the given constant
+M:\000_GIT\Slamtec\rplidar_sdk\sdk\src\sl_udp_channel.cpp(97,1): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 137 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  rplidar_driver.vcxproj -> M:\000_GIT\Slamtec\rplidar_sdk\output\x64\Release\rplidar_driver.dll
