@@ -4,6 +4,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.32929.386
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SlamtecCHOP", "BasicGeneratorCHOP.vcxproj", "{3F5BEECD-FA36-459F-91B8-BB481A67EF44}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF} = {1F0AA469-8A8F-4ADA-931D-967D2C5996DF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rplidar_driver", "rplidar_sdk\workspaces\vc14\rplidar_driver\rplidar_driver.vcxproj", "{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,14 +22,26 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|Win32.Build.0 = Debug|Win32
-		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x64.ActiveCfg = Debug|x64
-		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x64.Build.0 = Debug|x64
-		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x86.ActiveCfg = Debug|x64
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Release|Win32.ActiveCfg = Release|Win32
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Release|Win32.Build.0 = Release|Win32
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Release|x64.ActiveCfg = Release|x64
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Release|x64.Build.0 = Release|x64
 		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Release|x86.ActiveCfg = Release|x64
+		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x86.ActiveCfg = Release|x64
+		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x64.ActiveCfg = Release|x64
+		{3F5BEECD-FA36-459F-91B8-BB481A67EF44}.Debug|x64.Build.0 = Release|x64
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|Win32.ActiveCfg = Debug|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|Win32.Build.0 = Debug|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|Win32.ActiveCfg = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|Win32.Build.0 = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x64.ActiveCfg = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x64.Build.0 = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x86.ActiveCfg = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x86.Build.0 = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|x86.ActiveCfg = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|x86.Build.0 = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|x64.ActiveCfg = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Debug|x64.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
