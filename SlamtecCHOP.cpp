@@ -58,7 +58,6 @@ CreateCHOPInstance(const OP_NodeInfo* info)
 {
 	// Return a new instance of your class every time this is called.
 	// It will be called once per CHOP that is using the .dll
-	// printf("SlamtecCHOP::CreateCHOPInstance\n");
 	return new SlamtecCHOP(info);
 }
 
@@ -69,8 +68,7 @@ DestroyCHOPInstance(CHOP_CPlusPlusBase* instance)
 	// Delete the instance here, this will be called when
 	// Touch is shutting down, when the CHOP using that instance is deleted, or
 	// if the CHOP loads a different DLL
-
-	// printf("SlamtecCHOP:DestroyCHOPInstance\n");
+	
 	delete (SlamtecCHOP*)instance;
 }
 
@@ -86,6 +84,10 @@ SlamtecCHOP::SlamtecCHOP(const OP_NodeInfo*)
 SlamtecCHOP::~SlamtecCHOP()
 {
 	debug_info("Destructor called");
+	if(lidar->is_connected())
+	{
+		lidar->on_disconnect();
+	}
 }
 
 void
@@ -133,6 +135,11 @@ SlamtecCHOP::getChannelName(int32_t index, OP_String *name, const OP_Inputs*, vo
 			break;
 	}
 
+	if(index == 2)
+		full_label = "quality";
+	else if(index == 3)
+		full_label = "flag";
+
 	name->setString(full_label.c_str());
 }
 
@@ -152,28 +159,55 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	if (is_active_ && !lidar->is_connected())
 	{
 		const std::string com_port = inputs->getParString(PortName);
-		const std::string baudrate = inputs->getParString(BaudrateName);
-		lidar->connect(com_port, baudrate);
+		const int baudrate = inputs->getParInt(BaudrateName);
+		lidar->on_connect(com_port.c_str(), baudrate);
 	}
 	else if (!is_active_ && lidar->is_connected())
 	{
-		lidar->disconnect();
+		lidar->on_disconnect();
 	}
 
-	// Get length and channels from the output since they first need to be set to the current size
-	const int		channels = output->numChannels;
+	if(is_active_ && lidar->is_connected())
+	{
 
+		lidar->scan(50, 30000);
+
+		switch (coord_)
+		{
+			case CoordMenuItems::Polar:
+				for(int i = 0; i < num_samples_; i++)
+				{
+					output->channels[0][i] = static_cast<float>(lidar->data_[i].angle);
+					output->channels[1][i] = lidar->data_[i].distance;
+					output->channels[2][i] = static_cast<float>(lidar->data_[i].quality);
+					output->channels[3][i] = static_cast<float>(lidar->data_[i].flag);
+				}
+				break;
+			case CoordMenuItems::Cartesian:
+				for(int i = 0; i < num_samples_; i++)
+				{
+					float angle = static_cast<float>(lidar->data_[i].angle) / 2.0f * degreesToRadians;
+					output->channels[0][i] = lidar->data_[i].distance * cos(angle);
+					output->channels[1][i] = lidar->data_[i].distance * sin(angle);
+					output->channels[2][i] = static_cast<float>(lidar->data_[i].quality);
+					output->channels[3][i] = static_cast<float>(lidar->data_[i].flag);
+				}
+			break;
+		}
+		
+	}
+	
 	// If not active or lidar not connected, return empty data
 	if(!is_active_ || !lidar->is_connected())
 	{
-		for (int i = 0; i < channels; ++i)
+		for (int i = 0; i < output->numChannels; ++i)
 		{
 			for (int j = 0; j < num_samples_; ++j)
 			{
 				output->channels[i][j] = 0.0;
 			}
 		}
-		return;
+		return;	
 	}
 	
 }
@@ -188,10 +222,8 @@ void
 SlamtecCHOP::init()
 {
 	my_execute_count_ = 0;
-	num_samples_ = 0;
-	
+	num_samples_ = 720;
 	is_was_active_ = false;
-	
 	lidar = new RPLidarDevice();
 }
 
@@ -201,7 +233,7 @@ SlamtecCHOP::pulsePressed(const char* name, void* reserved1)
 	if (!strcmp(name, "Reset"))
 	{
 		debug_info("Reset pressed");
-		lidar->reset();
+		// do not do reset on pulse here, just deactivate and activate it again after some time
 	}
 }
 
@@ -232,7 +264,7 @@ SlamtecCHOP::getInfoCHOPChan(int32_t index,
 bool
 SlamtecCHOP::getInfoDATSize(OP_InfoDATSize* infoSize, void* reserved1)
 {
-	infoSize->rows = 2;
+	infoSize->rows = 7;
 	infoSize->cols = 2;
 	// Setting this to false means we'll be assigning values to the table
 	// one row at a time. True means we'll do it one column at a time.
@@ -271,6 +303,71 @@ SlamtecCHOP::getInfoDATEntries(int32_t index,
 		#else // macOS
 			snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
 		#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 2)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Serial number");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->serial_number;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 3)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Firmware version");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->firmware_version;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 4)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Hardware version");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->hardware_version;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 5)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Model");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->model;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 6)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Motor max/min/desired speed");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->max_speed + "/" + lidar->min_speed + "/" + lidar->desired_speed;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
 		entries->values[1]->setString(status.c_str());
 	}
 }
