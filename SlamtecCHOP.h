@@ -18,7 +18,7 @@
 #include "CHOP_CPlusPlusBase.h"
 #include "Parameters.h"
 
-#include "RPLidarDevice.h"
+#include "drvlogic/RPLidarDevice.h"
 
 // #include "rplidar_sdk/sdk/include/sl_lidar.h"
 // #include "rplidar_sdk/sdk/include/sl_lidar_driver.h"
@@ -78,7 +78,7 @@ private:
 
 	int32_t	my_execute_count_;
 	int		num_samples_;
-	int		num_channels_ = 2;
+	int		num_channels_ = 4;
 	
 	// Helper functions
 	static void debug_info(const char* message);
@@ -88,5 +88,7 @@ private:
 	RPLidarDevice *lidar;
 
 };
+
+const float degreesToRadians = (2.0f * 3.1415926535f) / 360.0f;
 
 #endif
