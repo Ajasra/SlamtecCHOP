@@ -9,20 +9,31 @@ class OP_ParameterManager;
 
 constexpr static char PageName[] = "Lidar Settings";
 
+constexpr static char DefaultName[] = "Default";
+constexpr static char DefaultLabel[] = "Run with Default Settings";
+
+constexpr static char StandartModeName[] = "Standartmode";
+constexpr static char StandartModeLabel[] = "Standart Mode";
+
 constexpr static char ActiveName[] = "Active";
 constexpr static char ActiveLabel[] = "Active";
 
 constexpr static char PortName[] = "Comport";
 constexpr static char PortLabel[] = "COM Port";
 
-constexpr static char ResetName[] = "Reset";
-constexpr static char ResetLabel[] = "Reset";
+constexpr static char BaudrateName[] = "Baudrate";
+constexpr static char BaudrateLabel[] = "Baudrate";
+
+constexpr static char SpeedName[] = "Motorspeed";
+constexpr static char SpeedLabel[] = "Motor Speed";
+
+constexpr static char SetSpeedName[] = "Setspeed";
+constexpr static char SetSpeedLabel[] = "Set Speed";
 
 constexpr static char CoordsName[] = "Coordsystem";
 constexpr static char CoordsLabel[] = "Coordinate System";
 
-constexpr static char BaudrateName[] = "Baudrate";
-constexpr static char BaudrateLabel[] = "Baudrate";
+
 
 
 #pragma endregion
@@ -33,29 +44,6 @@ enum class CoordMenuItems
 {
 	Polar, 
 	Cartesian
-};
-
-
-enum class BaudMenuItems
-{
-	b115200,
-	b256000,
-	b1000000
-};
-
-enum class PortMenuItems
-{
-	COM0,
-	COM1,
-	COM2,
-	COM3,
-	COM4,
-	COM5,
-	COM6,
-	COM7,
-	COM8,
-	COM9,
-	COM10
 };
 
 #pragma endregion
@@ -69,15 +57,11 @@ public:
 
 	// Active
 	static int				evalActive(const OP_Inputs* input);
-
-	// Port
-	static PortMenuItems	evalPort(const OP_Inputs* input);
+	static int				evalStandart(const OP_Inputs* input);
+	static int				evalMotorSpeed(const OP_Inputs* input);
 
 	// Coordinate system
 	static CoordMenuItems	evalCoord(const OP_Inputs* input);
-
-	// Baudrate
-	static BaudMenuItems	evalBaud(const OP_Inputs* input);
 
 };
 #pragma endregion

@@ -73,12 +73,14 @@ private:
 
 	bool	is_active_;
 	bool 	is_was_active_;
+	bool 	is_standart_;
 	
 	CoordMenuItems	coord_;
 
 	int32_t	my_execute_count_;
 	int		num_samples_;
 	int		num_channels_ = 4;
+	int		motor_speed_ = 0;
 	
 	// Helper functions
 	static void debug_info(const char* message);

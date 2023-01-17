@@ -33,18 +33,17 @@ RPLidarDevice::~RPLidarDevice()
 }
 
 bool
-RPLidarDevice::on_connect(const char* port, int baudrate)
+RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
 {
     if (is_connected_) return true;
     status_msg_ = "Connecting to RPLidar";
-
-    channel_ = (*createSerialPortChannel(port, baudRateLists[baudrate]));
 
     if (!lidar_drv_)
         lidar_drv_ = *createLidarDriver();
 
     if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL;
-
+    
+    channel_ = (*createSerialPortChannel(port, baudRateLists[baudrate]));
     sl_result ans =(lidar_drv_)->connect(channel_);
 
     if (SL_IS_FAIL(ans)) {
@@ -70,8 +69,16 @@ RPLidarDevice::on_connect(const char* port, int baudrate)
     is_connected_ = true;
     status_msg_ = "Connected to RPLidar";
 
+    get_scan_modes();
+
     lidar_drv_->setMotorSpeed();
-    lidar_drv_->startScan(0,1);
+    if(standart)
+    {
+        lidar_drv_->startScanExpress(0,0,0,&currentScanMode);
+    }else
+    {
+        lidar_drv_->startScan(0,1, 0, &currentScanMode);
+    }
     return true;
 }
 
@@ -119,6 +126,19 @@ std::string RPLidarDevice::get_device_status()
     return status_msg_;
 }
 
+void RPLidarDevice::setMotorSpeed(int speed)
+{
+    if(motor_ctrl_support_ != 0)
+    {
+        lidar_drv_->setMotorSpeed(speed);
+        status_msg_ = "Changing motor speed";
+        lidar_drv_->getMotorInfo(motorinfo_);
+        update_status();
+    }
+    
+}
+
+
 bool  RPLidarDevice::check_device_health(int * errorCode)
 {
     status_msg_ = "Checking device health";
@@ -140,12 +160,40 @@ bool  RPLidarDevice::check_device_health(int * errorCode)
     }
 }
 
+void RPLidarDevice::get_scan_modes()
+{
+    status_msg_ = "Getting scan modes";
+    lidar_drv_->getAllSupportedScanModes(scanModes);
+    scanModesStr = "";
+    for (int i = 0; i < scanModes.size(); i++)
+    {
+        scanModesStr += scanModes[i].scan_mode;
+        scanModesStr += " | ";
+    }
+
+    lidar_drv_->checkMotorCtrlSupport(motor_ctrl_support_);
+    switch (motor_ctrl_support_)
+    {
+        case MotorCtrlSupportNone:
+            motor_control = "None";
+            break;
+        case MotorCtrlSupportPwm:
+            motor_control = "PWM";
+            break;
+        case MotorCtrlSupportRpm:
+            motor_control = "RPM";
+            break;
+    }
+    
+}
+
 void RPLidarDevice::scan(float min_dist, float max_dist)
 {
     sl_lidar_response_measurement_node_hq_t nodes[8192];
     size_t   count = _countof(nodes);
     
     op_result_ = lidar_drv_->getScanDataWithIntervalHq(nodes, count);
+    data_count_ = count;
 
     if (SL_IS_OK(op_result_)) {
         for (int pos = 0; pos < (int)count ; ++pos) {
@@ -182,17 +230,17 @@ void RPLidarDevice::init_data()
         data_[i].quality = 0;
         data_[i].flag = 0;
     }
+    scanModesStr = "";
 }
 
 
 // TODO:
 // 1. Add a set motor speed if it available for current lidar
 // virtual sl_result setMotorSpeed(sl_u16 speed = DEFAULT_MOTOR_SPEED) = 0;
-// 2. AAdd reset for lidar
-// irtual sl_result reset(sl_u32 timeoutInMs = DEFAULT_TIMEOUT) = 0;
 // 3. Add a set scan mode
 // virtual sl_result getAllSupportedScanModes(std::vector<LidarScanMode>& outModes, sl_u32 timeoutInMs = DEFAULT_TIMEOUT) = 0;
 // 4. Get current frequency of the lidar
 // 5. add network mode and switch for it
 // 6. check the quality of data and reducing bad data
 // 7. refactor all code
+// 8. Auto search for baudrate

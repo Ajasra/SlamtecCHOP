@@ -151,16 +151,15 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	my_execute_count_++;
 
 	// update parameters
-	is_active_	= Parameters::evalActive(inputs) == 1;
-	coord_		= Parameters::evalCoord(inputs);
-
-	inputs->enablePar(ResetName, is_active_);
+	is_active_		= Parameters::evalActive(inputs) == 1;
+	is_standart_	= Parameters::evalStandart(inputs) == 1;
+	coord_			= Parameters::evalCoord(inputs);
 	
 	if (is_active_ && !lidar->is_connected())
 	{
 		const std::string com_port = inputs->getParString(PortName);
 		const int baudrate = inputs->getParInt(BaudrateName);
-		lidar->on_connect(com_port.c_str(), baudrate);
+		lidar->on_connect(com_port.c_str(), baudrate, is_standart_);
 	}
 	else if (!is_active_ && lidar->is_connected())
 	{
@@ -170,7 +169,7 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	if(is_active_ && lidar->is_connected())
 	{
 
-		lidar->scan(50, 30000);
+		lidar->scan(25, 30000);
 
 		switch (coord_)
 		{
@@ -230,11 +229,11 @@ SlamtecCHOP::init()
 void 
 SlamtecCHOP::pulsePressed(const char* name, void* reserved1)
 {
-	if (!strcmp(name, "Reset"))
-	{
-		debug_info("Reset pressed");
-		// do not do reset on pulse here, just deactivate and activate it again after some time
-	}
+	// if(!strcmp(name, "Setspeed"))
+	// {
+	// 	debug_info("Set speed pressed");
+	// 	lidar->setMotorSpeed(motor_speed_);
+	// }
 }
 
 // Info outputs
@@ -243,7 +242,7 @@ SlamtecCHOP::getNumInfoCHOPChans(void* reserved1)
 {
 	// We return the number of channel we want to output to any Info CHOP
 	// connected to the CHOP. In this example we are just going to send one channel.
-	return 1;
+	return 2;
 }
 
 void 
@@ -259,12 +258,17 @@ SlamtecCHOP::getInfoCHOPChan(int32_t index,
 		chan->name->setString("executeCount");
 		chan->value = static_cast<float>(my_execute_count_);
 	}
+	if (index == 1)
+	{
+		chan->name->setString("received Samples");
+		chan->value = static_cast<float>(lidar->data_count_);
+	}
 }
 
 bool
 SlamtecCHOP::getInfoDATSize(OP_InfoDATSize* infoSize, void* reserved1)
 {
-	infoSize->rows = 7;
+	infoSize->rows = 11;
 	infoSize->cols = 2;
 	// Setting this to false means we'll be assigning values to the table
 	// one row at a time. True means we'll do it one column at a time.
@@ -370,6 +374,58 @@ SlamtecCHOP::getInfoDATEntries(int32_t index,
 #endif
 		entries->values[1]->setString(status.c_str());
 	}
+
+	if (index == 7)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Last reading");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = std::to_string(lidar->data_count_);
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 8)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Available scan modes");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->scanModesStr;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 9)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Current scan mode");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->currentScanMode.scan_mode;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
+
+	if (index == 10)
+	{
+		// Set the value for the first column
+		entries->values[0]->setString("Motor control");
+		// Set the value for the second column
+		#ifdef WIN32
+		const std::string status = lidar->motor_control;
+#else // macOS
+		snprintf(tempBuffer, sizeof(tempBuffer), "%g", myOffset);
+#endif
+		entries->values[1]->setString(status.c_str());
+	}
 }
 
 // helper functions
@@ -382,11 +438,5 @@ SlamtecCHOP::debug_info(const char* message)
 	combined += message;
 	combined += "\n";
 	printf(combined.c_str());
-
-	/*
-	printf("\n"
-		"Firmware Ver: %d.%02d\n"
-		"Hardware Rev: %d\n",
-		devinfo.firmware_version >> 8, devinfo.firmware_version & 0xFF, (int)devinfo.hardware_version);
-		*/
+	
 }
