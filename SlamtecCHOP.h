@@ -74,6 +74,7 @@ private:
 	bool	is_active_;
 	bool 	is_was_active_;
 	bool 	is_standart_;
+	bool	is_network_;
 	
 	CoordMenuItems	coord_;
 

@@ -7,7 +7,9 @@ class OP_ParameterManager;
 
 // Names of the parameters
 
-constexpr static char PageName[] = "Lidar Settings";
+constexpr static char PageMainName[] = "Lidar Settings";
+constexpr static char PageConnectionsName[] = "Connection Settings";
+constexpr static char PageOutputName[] = "Output Settings";
 
 constexpr static char DefaultName[] = "Default";
 constexpr static char DefaultLabel[] = "Run with Default Settings";
@@ -18,11 +20,23 @@ constexpr static char StandartModeLabel[] = "Standart Mode";
 constexpr static char ActiveName[] = "Active";
 constexpr static char ActiveLabel[] = "Active";
 
+constexpr static char ConnectName[] = "Connectiontype";
+constexpr static char ConnectLabel[] = "Serial / TCP";
+
 constexpr static char PortName[] = "Comport";
 constexpr static char PortLabel[] = "COM Port";
 
 constexpr static char BaudrateName[] = "Baudrate";
 constexpr static char BaudrateLabel[] = "Baudrate";
+
+constexpr static char NetworkTypeName[] = "Networktype";
+constexpr static char NetworkTypeNameLabel[] = "TCP / UDP";
+
+constexpr static char IpName[] = "Ipaddress";
+constexpr static char IpLabel[] = "IP Address";
+
+constexpr static char NetworkPortName[] = "Ipport";
+constexpr static char NetworkPortLabel[] = "Network port";
 
 constexpr static char SpeedName[] = "Motorspeed";
 constexpr static char SpeedLabel[] = "Motor Speed";
@@ -58,6 +72,10 @@ public:
 	// Active
 	static int				evalActive(const OP_Inputs* input);
 	static int				evalStandart(const OP_Inputs* input);
+
+	static int				evalConnectionType(const OP_Inputs* input);
+	static int				evalNetworkType(const OP_Inputs* input);
+	
 	static int				evalMotorSpeed(const OP_Inputs* input);
 
 	// Coordinate system

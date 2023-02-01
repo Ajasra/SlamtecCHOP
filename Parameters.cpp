@@ -17,6 +17,18 @@ Parameters::evalStandart(const OP_Inputs* input)
 	return input->getParInt(StandartModeName);
 }
 
+int                                                      
+Parameters::evalConnectionType(const OP_Inputs* input)         
+{                                                        
+	return input->getParInt(ConnectName);           
+}
+
+int                                                             
+Parameters::evalNetworkType(const OP_Inputs* input)          
+{                                                               
+	return input->getParInt(NetworkTypeName);                       
+}                                                               
+
 int
 Parameters::evalMotorSpeed(const OP_Inputs* input)
 {
@@ -55,7 +67,7 @@ Parameters::setup(OP_ParameterManager* manager)
 
 		isActive.name = ActiveName;
 		isActive.label = ActiveLabel;
-		isActive.page = PageName;
+		isActive.page = PageMainName;
 		isActive.defaultValues[0] = 0;
 
 		OP_ParAppendResult res = manager->appendToggle(isActive);
@@ -68,10 +80,23 @@ Parameters::setup(OP_ParameterManager* manager)
 
 		isStandart.name = StandartModeName;
 		isStandart.label = StandartModeLabel;
-		isStandart.page = PageName;
+		isStandart.page = PageMainName;
 		isStandart.defaultValues[0] = 0;
 
 		OP_ParAppendResult res = manager->appendToggle(isStandart);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Connection type toogle
+	{
+		OP_NumericParameter isNetwork;
+
+		isNetwork.name = ConnectName;
+		isNetwork.label = ConnectLabel;
+		isNetwork.page = PageConnectionsName;
+		isNetwork.defaultValues[0] = 0;
+
+		OP_ParAppendResult res = manager->appendToggle(isNetwork);
 		assert(res == OP_ParAppendResult::Success);
 	}
 
@@ -81,7 +106,7 @@ Parameters::setup(OP_ParameterManager* manager)
 
 		cp.name = PortName;
 		cp.label = PortLabel;
-		cp.page = PageName;
+		cp.page = PageConnectionsName;
 		cp.defaultValue = "COM3";
 
 		OP_ParAppendResult res = manager->appendString(cp);
@@ -95,7 +120,7 @@ Parameters::setup(OP_ParameterManager* manager)
 
 		bw.name = BaudrateName;
 		bw.label = BaudrateLabel;
-		bw.page = PageName;
+		bw.page = PageConnectionsName;
 		bw.defaultValue = "1000000";
 
 		std::array<const char*, 3> Names =
@@ -109,6 +134,48 @@ Parameters::setup(OP_ParameterManager* manager)
 		OP_ParAppendResult res = manager->appendMenu(bw, int(Names.size()), Names.data(), Labels.data());
 
 		//OP_ParAppendResult res = manager->appendMenu(sp, int(Names.size()), names, labels);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Connection type toogle                                           
+	{                                                                   
+		OP_NumericParameter isUdp;                                  
+                                                                    
+		isUdp.name = NetworkTypeName;                                   
+		isUdp.label = NetworkPortLabel;                                 
+		isUdp.page = PageConnectionsName;                           
+		isUdp.defaultValues[0] = 1;                                 
+                                                                    
+		OP_ParAppendResult res = manager->appendToggle(isUdp);      
+		assert(res == OP_ParAppendResult::Success);                     
+	}                                                                   
+
+	
+	// IP Address
+	{
+		OP_StringParameter ip;
+
+		ip.name = IpName;
+		ip.label = IpLabel;
+		ip.page = PageConnectionsName;
+		ip.defaultValue = "192.168.11.2";
+
+		OP_ParAppendResult res = manager->appendString(ip);
+
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// Network port
+	{
+		OP_StringParameter np;
+
+		np.name = NetworkPortName;
+		np.label = NetworkPortLabel;
+		np.page = PageConnectionsName;
+		np.defaultValue = "8089";
+
+		OP_ParAppendResult res = manager->appendString(np);
+
 		assert(res == OP_ParAppendResult::Success);
 	}
 
@@ -137,7 +204,7 @@ Parameters::setup(OP_ParameterManager* manager)
 
 		sp.name = CoordsName;
 		sp.label = CoordsLabel;
-		sp.page = PageName;
+		sp.page = PageOutputName;
 		sp.defaultValue = "Polar";
 
 		std::array<const char*, 2> Names =

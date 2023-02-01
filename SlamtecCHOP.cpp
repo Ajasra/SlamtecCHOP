@@ -154,12 +154,43 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	is_active_		= Parameters::evalActive(inputs) == 1;
 	is_standart_	= Parameters::evalStandart(inputs) == 1;
 	coord_			= Parameters::evalCoord(inputs);
+
+	is_network_		= Parameters::evalConnectionType(inputs) == 1;
+
+
+	inputs->enablePar(StandartModeName, !is_active_);
+	inputs->enablePar(ConnectName, !is_active_);
+	inputs->enablePar(PortName, !is_active_);
+	inputs->enablePar(BaudrateName, !is_active_);
+	inputs->enablePar(IpName, !is_active_);
+	inputs->enablePar(NetworkPortName, !is_active_);
+	inputs->enablePar(NetworkPortName, !is_active_);
+
+	if(!is_active_)
+	{
+		inputs->enablePar(NetworkPortName, is_network_);
+		inputs->enablePar(IpName, is_network_);
+		inputs->enablePar(PortName, !is_network_);
+		inputs->enablePar(BaudrateName, !is_network_);
+	}
+
+	
 	
 	if (is_active_ && !lidar->is_connected())
 	{
-		const std::string com_port = inputs->getParString(PortName);
-		const int baudrate = inputs->getParInt(BaudrateName);
-		lidar->on_connect(com_port.c_str(), baudrate, is_standart_);
+
+		if(is_network_)
+		{
+			const bool udp	= Parameters::evalNetworkType(inputs) == 1;
+			const std::string ip_address = inputs->getParString(IpName);
+			const int ip_port = inputs->getParInt(NetworkPortName);
+			lidar->on_connect_tcp(ip_address.c_str(), ip_port, udp);
+		}else
+		{
+			const std::string com_port = inputs->getParString(PortName);
+			const int baudrate = inputs->getParInt(BaudrateName);
+			lidar->on_connect(com_port.c_str(), baudrate, is_standart_);
+		}
 	}
 	else if (!is_active_ && lidar->is_connected())
 	{

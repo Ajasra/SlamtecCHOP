@@ -38,10 +38,12 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
     if (is_connected_) return true;
     status_msg_ = "Connecting to RPLidar";
 
+    channelTypeSerial_ = true;
+
     if (!lidar_drv_)
         lidar_drv_ = *createLidarDriver();
 
-    if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL;
+    if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL == 1;
     
     channel_ = (*createSerialPortChannel(port, baudRateLists[baudrate]));
     sl_result ans =(lidar_drv_)->connect(channel_);
@@ -71,7 +73,11 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
 
     get_scan_modes();
 
-    lidar_drv_->setMotorSpeed();
+    if(channelTypeSerial_)
+    {
+        lidar_drv_->setMotorSpeed();
+    }
+    
     if(standart)
     {
         lidar_drv_->startScanExpress(0,0,0,&currentScanMode);
@@ -82,19 +88,74 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
     return true;
 }
 
+bool RPLidarDevice::on_connect_tcp(const char* ip, int port, bool udp = false)
+{
+    if (is_connected_) return true;
+    status_msg_ = "Connecting to RPLidar TCP";
+
+    // printf("Connecting to IP: %s\n", ip);
+    // printf("Connecting to PORT: %d\n", port);
+
+    channelTypeSerial_ = false;
+
+    if(udp)
+    {
+        printf("UDP\n");
+        channel_ = *createUdpChannel(ip, port);
+    }else
+    {
+        printf("TCP\n");
+        channel_ = *createTcpChannel(ip, port);
+    }
+
+    if (!lidar_drv_)
+        lidar_drv_ = *createLidarDriver();
+
+    if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL == 1;
+    
+    sl_result ans =(lidar_drv_)->connect(channel_);
+
+    if (SL_IS_FAIL(ans)) {
+        return false;
+    }
+    // retrieve the devinfo
+    ans = lidar_drv_->getDeviceInfo(devinfo_);
+
+    if (SL_IS_FAIL(ans)) {
+        printf("Failed to get device info. code: %x\n", ans);
+        return false;
+    }
+    ans = lidar_drv_->getMotorInfo(motorinfo_);
+
+    update_status();
+
+    if(!check_device_health())
+    {
+        return false;
+    }
+
+    if (SL_IS_FAIL(ans)) {
+        return false;
+    }
+    
+    is_connected_ = true;
+    return true;
+}
+
 void
 RPLidarDevice::on_disconnect()
 {
     status_msg_ = "Disconnecting from RPLidar";
     if (is_connected_) {
         lidar_drv_->stop();
-        lidar_drv_->setMotorSpeed(0);
+        if(channelTypeSerial_) lidar_drv_->setMotorSpeed(0);
     }
     is_connected_ = false;
     delete lidar_drv_;
     lidar_drv_ = NULL;
     delete channel_;
     channel_ = NULL;
+    channelTypeSerial_ = false;
     init_data();
 }
 
@@ -128,7 +189,7 @@ std::string RPLidarDevice::get_device_status()
 
 void RPLidarDevice::setMotorSpeed(int speed)
 {
-    if(motor_ctrl_support_ != 0)
+    if(motor_ctrl_support_ != 0 && channelTypeSerial_)
     {
         lidar_drv_->setMotorSpeed(speed);
         status_msg_ = "Changing motor speed";
@@ -236,11 +297,6 @@ void RPLidarDevice::init_data()
 
 // TODO:
 // 1. Add a set motor speed if it available for current lidar
-// virtual sl_result setMotorSpeed(sl_u16 speed = DEFAULT_MOTOR_SPEED) = 0;
-// 3. Add a set scan mode
-// virtual sl_result getAllSupportedScanModes(std::vector<LidarScanMode>& outModes, sl_u32 timeoutInMs = DEFAULT_TIMEOUT) = 0;
-// 4. Get current frequency of the lidar
-// 5. add network mode and switch for it
-// 6. check the quality of data and reducing bad data
-// 7. refactor all code
-// 8. Auto search for baudrate
+// 2. Auto search for baudrate
+// 3. Refactor all code
+// 4. Move data and connection into separate thread to not lock TD while it trying to connect or any problem happens

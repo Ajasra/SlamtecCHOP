@@ -9,6 +9,8 @@ public:
     RPLidarDevice();
     ~RPLidarDevice();
     bool on_connect(const char * port, int baudrate, bool standart = false);
+    bool on_connect_tcp(const char * ip, int port, bool udp);
+    // bool on_connect_udp(const char * ip, int port);
     void on_disconnect();
     bool check_device_health(int * errorCode = NULL);
     void setMotorSpeed(int speed);
@@ -53,4 +55,6 @@ protected:
     LidarMotorInfo motorinfo_;
     ILidarDriver * lidar_drv_;
     IChannel* channel_;
+
+    bool channelTypeSerial_ = false;
 };
