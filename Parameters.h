@@ -47,6 +47,12 @@ constexpr static char SetSpeedLabel[] = "Set Speed";
 constexpr static char CoordsName[] = "Coordsystem";
 constexpr static char CoordsLabel[] = "Coordinate System";
 
+constexpr static char PrecisionName[] = "Precision";
+constexpr static char PrecisionLabel[] = "Precision";
+
+constexpr static char QualityName[] = "Qualitycheck";
+constexpr static char  QualityLabel[] = "Quality Check";
+
 
 
 
@@ -72,11 +78,13 @@ public:
 	// Active
 	static int				evalActive(const OP_Inputs* input);
 	static int				evalStandart(const OP_Inputs* input);
+	static int				evalQuality(const OP_Inputs* input);
 
 	static int				evalConnectionType(const OP_Inputs* input);
 	static int				evalNetworkType(const OP_Inputs* input);
 	
 	static int				evalMotorSpeed(const OP_Inputs* input);
+	static int				evalPrecision(const OP_Inputs* input);
 
 	// Coordinate system
 	static CoordMenuItems	evalCoord(const OP_Inputs* input);

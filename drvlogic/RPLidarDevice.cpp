@@ -19,6 +19,8 @@ RPLidarDevice::RPLidarDevice()
     
     lidar_drv_ = NULL;
     channel_ = NULL;
+    precision_ = 2.0f;
+    qualityCheck_ = false;
 
     init_data();
     
@@ -30,6 +32,13 @@ RPLidarDevice::~RPLidarDevice()
     on_disconnect();
     delete lidar_drv_;
     lidar_drv_ = NULL;
+}
+
+void
+RPLidarDevice::setPrecision(float precision, bool qualityCheck)
+{
+    precision_ = precision;
+    qualityCheck_ = qualityCheck;
 }
 
 bool
@@ -259,32 +268,48 @@ void RPLidarDevice::scan(float min_dist, float max_dist)
     if (SL_IS_OK(op_result_)) {
         for (int pos = 0; pos < (int)count ; ++pos) {
 
+            bool write = true;
+
+            if(qualityCheck_)
+            {
+                if(nodes[pos].flag < 2 || nodes[pos].quality < 150)
+                {
+                    // skip not updated
+                    write = false;
+                }
+            }
+
             double tempAngle = nodes[pos].angle_z_q14 * 90.f / 16384.f;
             if (tempAngle > 360.0f || tempAngle < 0.0f)
             {
                 // skip bad angles
-                continue;
+                write = false;
             }
             
-            int halfAngle = floor(tempAngle * 2);
+            int halfAngle = floor(tempAngle * precision_);
             float distance = nodes[pos].dist_mm_q2 / 4.0f;
             if (distance > max_dist || distance < min_dist)
             {
                 // skip bad distances
                 data_[halfAngle].distance = 0;
-                continue;
+                write = false;
             }
-            data_[halfAngle].distance = distance;
-            data_[halfAngle].angle = halfAngle;
-            data_[halfAngle].quality = nodes[pos].quality;
-            data_[halfAngle].flag = nodes[pos].flag;
+
+            if(write)
+            {
+                data_[halfAngle].distance = distance;
+                data_[halfAngle].angle = halfAngle;
+                data_[halfAngle].quality = nodes[pos].quality;
+                data_[halfAngle].flag = nodes[pos].flag;
+            }
+            
         }
     }
 }
 
 void RPLidarDevice::init_data()
 {
-    for(int i =0; i < 720; i++)
+    for(int i =0; i < 720*2; i++)
     {
         data_[i].distance = 0;
         data_[i].angle = i / 2;

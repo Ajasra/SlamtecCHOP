@@ -75,6 +75,7 @@ private:
 	bool 	is_was_active_;
 	bool 	is_standart_;
 	bool	is_network_;
+	bool    is_quality_;
 	
 	CoordMenuItems	coord_;
 
@@ -82,6 +83,8 @@ private:
 	int		num_samples_;
 	int		num_channels_ = 4;
 	int		motor_speed_ = 0;
+
+	float precision_ = 2.0f;
 	
 	// Helper functions
 	static void debug_info(const char* message);

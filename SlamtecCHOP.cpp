@@ -108,7 +108,7 @@ bool
 SlamtecCHOP::getOutputInfo(CHOP_OutputInfo* info, const OP_Inputs* inputs, void*)
 {
 	info->numChannels = num_channels_;
-	info->numSamples = num_samples_;
+	info->numSamples = 360 * static_cast<int>(precision_);
 	info->startIndex = 0;
 
 	return true;
@@ -157,6 +157,9 @@ SlamtecCHOP::execute(CHOP_Output* output,
 
 	is_network_		= Parameters::evalConnectionType(inputs) == 1;
 
+	precision_		= Parameters::evalPrecision(inputs);
+	is_quality_		= Parameters::evalQuality(inputs);
+
 
 	inputs->enablePar(StandartModeName, !is_active_);
 	inputs->enablePar(ConnectName, !is_active_);
@@ -165,6 +168,8 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	inputs->enablePar(IpName, !is_active_);
 	inputs->enablePar(NetworkPortName, !is_active_);
 	inputs->enablePar(NetworkPortName, !is_active_);
+	inputs->enablePar(PrecisionName, !is_active_);
+	inputs->enablePar(QualityName, !is_active_);
 
 	if(!is_active_)
 	{
@@ -178,6 +183,8 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	
 	if (is_active_ && !lidar->is_connected())
 	{
+		num_samples_ = 360 * precision_;
+		lidar->setPrecision(precision_, is_quality_);
 
 		if(is_network_)
 		{
@@ -216,7 +223,7 @@ SlamtecCHOP::execute(CHOP_Output* output,
 			case CoordMenuItems::Cartesian:
 				for(int i = 0; i < num_samples_; i++)
 				{
-					float angle = static_cast<float>(lidar->data_[i].angle) / 2.0f * degreesToRadians;
+					float angle = static_cast<float>(lidar->data_[i].angle) / precision_ * degreesToRadians;
 					output->channels[0][i] = lidar->data_[i].distance * cos(angle);
 					output->channels[1][i] = lidar->data_[i].distance * sin(angle);
 					output->channels[2][i] = static_cast<float>(lidar->data_[i].quality);
@@ -252,9 +259,10 @@ void
 SlamtecCHOP::init()
 {
 	my_execute_count_ = 0;
-	num_samples_ = 720;
+	num_samples_ = 360 * precision_;
 	is_was_active_ = false;
 	lidar = new RPLidarDevice();
+	precision_ = 2.0f;
 }
 
 void 

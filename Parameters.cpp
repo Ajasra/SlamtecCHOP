@@ -17,6 +17,12 @@ Parameters::evalStandart(const OP_Inputs* input)
 	return input->getParInt(StandartModeName);
 }
 
+int
+Parameters::evalQuality(const OP_Inputs* input)
+{
+	return input->getParInt(QualityName);
+}
+
 int                                                      
 Parameters::evalConnectionType(const OP_Inputs* input)         
 {                                                        
@@ -33,6 +39,12 @@ int
 Parameters::evalMotorSpeed(const OP_Inputs* input)
 {
 	return input->getParInt(SpeedName);
+}
+
+int
+Parameters::evalPrecision(const OP_Inputs* input)
+{
+	return input->getParInt(PrecisionName);
 }
 
 CoordMenuItems
@@ -179,24 +191,37 @@ Parameters::setup(OP_ParameterManager* manager)
 		assert(res == OP_ParAppendResult::Success);
 	}
 
-	// Motor speed
-	// {
-	// 	OP_NumericParameter	np;
-	//
-	// 	np.name = SpeedName;
-	// 	np.label = SpeedLabel;
-	// 	np.page = PageName;
-	// 	np.minSliders[0] = 480;
-	// 	np.maxSliders[0] = 1200;
-	// 	np.minValues[0] = 480;
-	// 	np.maxValues[0] = 1200;
-	// 	np.clampMins[0] = true;
-	// 	np.clampMaxes[0] = true;
-	// 	np.defaultValues[0] = 600;
-	// 	
-	// 	OP_ParAppendResult res = manager->appendInt(np);
-	// 	assert(res == OP_ParAppendResult::Success);
-	// }
+	// Precision
+	{
+		OP_NumericParameter	np;
+	
+		np.name = PrecisionName;
+		np.label = PrecisionLabel;
+		np.page = PageOutputName;
+		np.minSliders[0] = 1;
+		np.maxSliders[0] = 4;
+		np.minValues[0] = 1;
+		np.maxValues[0] = 4;
+		np.clampMins[0] = true;
+		np.clampMaxes[0] = true;
+		np.defaultValues[0] = 2;
+		
+		OP_ParAppendResult res = manager->appendInt(np);
+		assert(res == OP_ParAppendResult::Success);
+	}
+
+	// quality check
+	{
+		OP_NumericParameter isQuality;
+
+		isQuality.name = QualityName;
+		isQuality.label = QualityLabel;
+		isQuality.page = PageOutputName;
+		isQuality.defaultValues[0] = 0;
+
+		OP_ParAppendResult res = manager->appendToggle(isQuality);
+		assert(res == OP_ParAppendResult::Success);
+	}
 	
 	// Coordinate system
 	{
