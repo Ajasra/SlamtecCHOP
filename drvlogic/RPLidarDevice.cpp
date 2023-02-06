@@ -1,4 +1,5 @@
 ﻿#include "RPLidarDevice.h"
+#include <thread>
 
 static const int baudRateLists[] = {
     115200,
@@ -12,6 +13,8 @@ RPLidarDevice::RPLidarDevice()
     status_msg_ = "RPLidar instance created";
 
     is_connected_ = false;
+    is_busy_ = false;
+    
     serial_number = "";
     hardware_version = "";
     firmware_version = "";
@@ -23,7 +26,6 @@ RPLidarDevice::RPLidarDevice()
     qualityCheck_ = false;
 
     init_data();
-    
 }
 
 RPLidarDevice::~RPLidarDevice()
@@ -42,17 +44,18 @@ RPLidarDevice::setPrecision(float precision, bool qualityCheck)
 }
 
 bool
-RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
+RPLidarDevice::thr_connect(std::string& port, int& baudrate, bool& standart)
 {
-    if (is_connected_) return true;
-    status_msg_ = "Connecting to RPLidar";
-
     channelTypeSerial_ = true;
 
     if (!lidar_drv_)
         lidar_drv_ = *createLidarDriver();
 
-    if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL == 1;
+    if (!(bool)lidar_drv_)
+    {
+        is_busy_ = false;
+        return SL_RESULT_OPERATION_FAIL == 1;
+    }
     
     channel_ = (*createSerialPortChannel(port, baudRateLists[baudrate]));
     sl_result ans =(lidar_drv_)->connect(channel_);
@@ -60,12 +63,14 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
     if (SL_IS_FAIL(ans)) {
         printf("Error, cannot bind to the specified serial port %s.\n"
             , port);
+        is_busy_ = false;
         return false;
     }
     
     ans = lidar_drv_->getDeviceInfo(devinfo_);
     if (SL_IS_FAIL(ans)) {
         printf("Failed to get device info. code: %x\n", ans);
+        is_busy_ = false;
         return false;
     }
     ans = lidar_drv_->getMotorInfo(motorinfo_);
@@ -74,12 +79,13 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
 
     if(!check_device_health())
     {
+        is_busy_ = false;
         return false;
     }
 
     is_connected_ = true;
     status_msg_ = "Connected to RPLidar";
-
+    
     get_scan_modes();
 
     if(channelTypeSerial_)
@@ -94,6 +100,25 @@ RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
     {
         lidar_drv_->startScan(0,1, 0, &currentScanMode);
     }
+
+    is_busy_ = false;
+    return false;
+}
+
+bool
+RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
+{
+    if (is_connected_ || is_busy_) return true;
+    // status_msg_ = "Connecting to RPLidar";
+
+    port_s = port;
+    _baudrate = baudrate;
+    _standart = standart;
+
+    is_busy_ = true;
+    _lidarThread = std::thread([this] {this->thr_connect(port_s, _baudrate, _standart);});
+    _lidarThread.detach();
+    
     return true;
 }
 
@@ -155,6 +180,17 @@ void
 RPLidarDevice::on_disconnect()
 {
     status_msg_ = "Disconnecting from RPLidar";
+
+    if (_lidarThread.joinable())
+    {
+        _lidarThread.join();
+        printf("Thread closed\n");
+        //_lidarThread.detach();
+        //_lidarThread.~thread();
+        //std::terminate();
+        is_busy_ = false;
+    }
+    
     if (is_connected_) {
         lidar_drv_->stop();
         if(channelTypeSerial_) lidar_drv_->setMotorSpeed(0);
@@ -191,7 +227,8 @@ RPLidarDevice::update_status()
      desired_speed = std::to_string(motorinfo_.desired_speed);
 }
 
-std::string RPLidarDevice::get_device_status()
+std::string
+RPLidarDevice::get_device_status()
 {
     return status_msg_;
 }
@@ -207,7 +244,6 @@ void RPLidarDevice::setMotorSpeed(int speed)
     }
     
 }
-
 
 bool  RPLidarDevice::check_device_health(int * errorCode)
 {
@@ -259,6 +295,8 @@ void RPLidarDevice::get_scan_modes()
 
 void RPLidarDevice::scan(float min_dist, float max_dist)
 {
+    if(is_busy_) return;
+    
     sl_lidar_response_measurement_node_hq_t nodes[8192];
     size_t   count = _countof(nodes);
     

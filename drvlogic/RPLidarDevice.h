@@ -9,6 +9,7 @@ public:
     RPLidarDevice();
     ~RPLidarDevice();
     void setPrecision(float precision, bool qualityCheck);
+    bool thr_connect(std::string& port, int& baudrate, bool& standart);
     bool on_connect(const char * port, int baudrate, bool standart = false);
     bool on_connect_tcp(const char * ip, int port, bool udp);
     // bool on_connect_udp(const char * ip, int port);
@@ -43,12 +44,17 @@ public:
     
     lidar_data data_[720*2];
     int data_count_;
+
+    std::string port_s;
+    int _baudrate;
+    bool _standart;
     
 protected:
-    bool  is_connected_;
-    std::string status_msg_;
 
-    MotorCtrlSupport motor_ctrl_support_;
+    std::string status_msg_;
+    
+    bool  is_connected_;
+    bool  is_busy_;             // for multithreading
     
     sl_result     op_result_;
     sl_lidar_response_device_info_t devinfo_;
@@ -57,8 +63,13 @@ protected:
     ILidarDriver * lidar_drv_;
     IChannel* channel_;
 
-    bool channelTypeSerial_ = false;
+    MotorCtrlSupport motor_ctrl_support_;
 
+    
+    // parameters
+    bool channelTypeSerial_ = false;
     float precision_;
     float qualityCheck_;
+
+    std::thread _lidarThread;
 };
