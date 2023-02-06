@@ -22,3 +22,5 @@ You can add the infoDAT to see lidar information.
 - [x] Receive lidar information and available modes
 - [ ] Support for the network models over TCP/UDP
 - [ ] Settings for the lidar (change mode, change motor speed, etc)
+
+Did you find it useful? - support by [buying me a book](https://www.buymeacoffee.com/vasilyonl)
