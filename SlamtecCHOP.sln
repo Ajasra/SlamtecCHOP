@@ -40,6 +40,7 @@ Global
 		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x64.ActiveCfg = Release|x64
 		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x86.ActiveCfg = Release|Win32
 		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x86.Build.0 = Release|Win32
+		{1F0AA469-8A8F-4ADA-931D-967D2C5996DF}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

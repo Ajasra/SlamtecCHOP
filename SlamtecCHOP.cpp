@@ -154,12 +154,11 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	is_active_		= Parameters::evalActive(inputs) == 1;
 	is_standart_	= Parameters::evalStandart(inputs) == 1;
 	coord_			= Parameters::evalCoord(inputs);
-
 	is_network_		= Parameters::evalConnectionType(inputs) == 1;
 
-	precision_		= Parameters::evalPrecision(inputs);
+	precision_		= static_cast<float>(Parameters::evalPrecision(inputs));
 	is_quality_		= Parameters::evalQuality(inputs);
-
+	inputs->getParDouble2(DistanceName,distance_min_,distance_max_);
 
 	inputs->enablePar(StandartModeName, !is_active_);
 	inputs->enablePar(ConnectName, !is_active_);
@@ -178,25 +177,26 @@ SlamtecCHOP::execute(CHOP_Output* output,
 		inputs->enablePar(PortName, !is_network_);
 		inputs->enablePar(BaudrateName, !is_network_);
 	}
-
-	
 	
 	if (is_active_ && !lidar->is_connected())
 	{
-		num_samples_ = 360 * precision_;
-		lidar->setPrecision(precision_, is_quality_);
+		num_samples_ = static_cast<int>(precision_) * 360;
 
 		if(is_network_)
 		{
 			const bool udp	= Parameters::evalNetworkType(inputs) == 1;
 			const std::string ip_address = inputs->getParString(IpName);
 			const int ip_port = inputs->getParInt(NetworkPortName);
-			lidar->on_connect_tcp(ip_address.c_str(), ip_port, udp);
+
+			lidar->setLidar(false, ip_address.c_str(), ip_port, precision_, is_quality_, is_standart_, udp);
+			lidar->on_connect();
 		}else
 		{
 			const std::string com_port = inputs->getParString(PortName);
 			const int baudrate = inputs->getParInt(BaudrateName);
-			lidar->on_connect(com_port.c_str(), baudrate, is_standart_);
+
+			lidar->setLidar(true, com_port.c_str(), baudrate, precision_, is_quality_, is_standart_, false);
+			lidar->on_connect();
 		}
 	}
 	else if (!is_active_ && lidar->is_connected())
@@ -207,14 +207,14 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	if(is_active_ && lidar->is_connected())
 	{
 
-		lidar->scan(25, 30000);
+		lidar->scan(distance_min_ * 1000, distance_max_ * 1000);
 
 		switch (coord_)
 		{
 			case CoordMenuItems::Polar:
 				for(int i = 0; i < num_samples_; i++)
 				{
-					output->channels[0][i] = static_cast<float>(lidar->data_[i].angle);
+					output->channels[0][i] = static_cast<float>(lidar->data_[i].angle) / precision_;
 					output->channels[1][i] = lidar->data_[i].distance;
 					output->channels[2][i] = static_cast<float>(lidar->data_[i].quality);
 					output->channels[3][i] = static_cast<float>(lidar->data_[i].flag);
@@ -241,7 +241,7 @@ SlamtecCHOP::execute(CHOP_Output* output,
 		{
 			for (int j = 0; j < num_samples_; ++j)
 			{
-				output->channels[i][j] = 0.0;
+				output->channels[i][j] = -1.0;
 			}
 		}
 		return;	
@@ -259,10 +259,9 @@ void
 SlamtecCHOP::init()
 {
 	my_execute_count_ = 0;
-	num_samples_ = 360 * precision_;
+	num_samples_ = 360 * static_cast<int>(precision_);
 	is_was_active_ = false;
 	lidar = new RPLidarDevice();
-	precision_ = 2.0f;
 }
 
 void 
@@ -281,7 +280,7 @@ SlamtecCHOP::getNumInfoCHOPChans(void* reserved1)
 {
 	// We return the number of channel we want to output to any Info CHOP
 	// connected to the CHOP. In this example we are just going to send one channel.
-	return 2;
+	return 3;
 }
 
 void 
@@ -301,6 +300,11 @@ SlamtecCHOP::getInfoCHOPChan(int32_t index,
 	{
 		chan->name->setString("received Samples");
 		chan->value = static_cast<float>(lidar->data_count_);
+	}
+	if (index == 2)
+	{
+		chan->name->setString("Random");
+		chan->value = static_cast<float>(lidar->_rnd_number);
 	}
 }
 
@@ -467,8 +471,6 @@ SlamtecCHOP::getInfoDATEntries(int32_t index,
 	}
 }
 
-// helper functions
-// Print out to console
 void 
 SlamtecCHOP::debug_info(const char* message)
 {

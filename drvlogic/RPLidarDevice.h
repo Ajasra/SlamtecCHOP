@@ -4,72 +4,76 @@
 
 class RPLidarDevice {
 
-public:
+    public:
+        
+        RPLidarDevice();
+        ~RPLidarDevice();
+        
+        // connect and disconnect
+        bool on_connect();
+        void on_disconnect();
+        bool thr_connect(bool& serial, std::string& port, int& baudrate, bool& standart, bool& udp);
     
-    RPLidarDevice();
-    ~RPLidarDevice();
-    void setPrecision(float precision, bool qualityCheck);
-    bool thr_connect(std::string& port, int& baudrate, bool& standart);
-    bool on_connect(const char * port, int baudrate, bool standart = false);
-    bool on_connect_tcp(const char * ip, int port, bool udp);
-    // bool on_connect_udp(const char * ip, int port);
-    void on_disconnect();
-    bool check_device_health(int * errorCode = NULL);
-    void setMotorSpeed(int speed);
-    [[nodiscard]] bool is_connected() const { return is_connected_; }
+        bool check_device_health(int * errorCode = NULL);
+        void get_scan_modes();
 
-    void get_scan_modes();
+        void scan(float min_dist, float max_dist);
+        void init_data();
 
-    void scan(float min_dist, float max_dist);
-    void init_data();
+        void update_status();
+        
+        std::string get_device_status();
+        [[nodiscard]] bool is_connected() const { return is_connected_; }
 
-    void update_status();
-    
-    std::string get_device_status();
+        void setMotorSpeed(int speed);
+        void setLidar(bool serial, const char* address_1, int address_2, float precision, bool qualityCheck = true, bool standart = false, bool udp = true);
 
-    // lidar data
-    std::string serial_number;
-    std::string firmware_version;
-    std::string hardware_version;
-    std::string model;
-    // motor data
-    std::string max_speed;
-    std::string min_speed;
-    std::string desired_speed;
-    std::string motor_control;
-    //scan modes
-    std::vector<LidarScanMode> scanModes;
-    std::string scanModesStr = "";
-    LidarScanMode currentScanMode;
-    
-    lidar_data data_[720*2];
-    int data_count_;
+        // lidar data
+        std::string serial_number;
+        std::string firmware_version;
+        std::string hardware_version;
+        std::string model;
+        // motor data
+        std::string max_speed;
+        std::string min_speed;
+        std::string desired_speed;
+        std::string motor_control;
+        //scan modes
+        std::vector<LidarScanMode> scanModes;
+        std::string scanModesStr = "";
+        LidarScanMode currentScanMode;
+        
+        lidar_data data_[720*2];
+        int data_count_;
 
-    std::string port_s;
-    int _baudrate;
-    bool _standart;
-    
-protected:
+        std::string _address_1;     // serial port / ip
+        int _address_2;          // baudrate / network port
+        bool _standart;
+        bool _udp;
+        bool _channelTypeSerial = true;
 
-    std::string status_msg_;
-    
-    bool  is_connected_;
-    bool  is_busy_;             // for multithreading
-    
-    sl_result     op_result_;
-    sl_lidar_response_device_info_t devinfo_;
-    sl_lidar_response_device_health_t healthinfo_;
-    LidarMotorInfo motorinfo_;
-    ILidarDriver * lidar_drv_;
-    IChannel* channel_;
+        int _rnd_number = 0;
+        
+    protected:
 
-    MotorCtrlSupport motor_ctrl_support_;
+        std::string status_msg_;
+        
+        bool  is_connected_;
+        bool  is_busy_;             // for multithreading
 
-    
-    // parameters
-    bool channelTypeSerial_ = false;
-    float precision_;
-    float qualityCheck_;
+        IChannel* channel_;
+        ILidarDriver * lidar_drv_;
+        
+        sl_result     op_result_;
+        sl_lidar_response_device_info_t devinfo_;
+        sl_lidar_response_device_health_t healthinfo_;
+        LidarMotorInfo motorinfo_;
+        MotorCtrlSupport motor_ctrl_support_;
 
-    std::thread _lidarThread;
+        
+        // parameters
+        float precision_;
+        bool qualityCheck_;
+
+        std::thread _lidarThread;
 };

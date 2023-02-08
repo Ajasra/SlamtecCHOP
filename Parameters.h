@@ -30,7 +30,7 @@ constexpr static char BaudrateName[] = "Baudrate";
 constexpr static char BaudrateLabel[] = "Baudrate";
 
 constexpr static char NetworkTypeName[] = "Networktype";
-constexpr static char NetworkTypeNameLabel[] = "TCP / UDP";
+constexpr static char NetworkTypeLabel[] = "TCP / UDP";
 
 constexpr static char IpName[] = "Ipaddress";
 constexpr static char IpLabel[] = "IP Address";
@@ -51,10 +51,10 @@ constexpr static char PrecisionName[] = "Precision";
 constexpr static char PrecisionLabel[] = "Precision";
 
 constexpr static char QualityName[] = "Qualitycheck";
-constexpr static char  QualityLabel[] = "Quality Check";
+constexpr static char QualityLabel[] = "Quality Check";
 
-
-
+constexpr static char DistanceName[] = "Distance";
+constexpr static char DistanceLabel[] = "Distance (m)";
 
 #pragma endregion
 

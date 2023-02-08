@@ -20,8 +20,8 @@ RPLidarDevice::RPLidarDevice()
     firmware_version = "";
     is_connected_ = false;
     
-    lidar_drv_ = NULL;
-    channel_ = NULL;
+    lidar_drv_ = nullptr;
+    channel_ = nullptr;
     precision_ = 2.0f;
     qualityCheck_ = false;
 
@@ -33,20 +33,43 @@ RPLidarDevice::~RPLidarDevice()
     status_msg_ = "RPLidar destructor called";
     on_disconnect();
     delete lidar_drv_;
-    lidar_drv_ = NULL;
+    lidar_drv_ = nullptr;
 }
 
 void
-RPLidarDevice::setPrecision(float precision, bool qualityCheck)
+RPLidarDevice::setLidar(bool serial, const char* address_1, int address_2, float precision, bool qualityCheck, bool standart, bool udp)
 {
+    if (is_busy_)
+    {
+        // check if it in connection now, then just do nothing
+        status_msg_ = "RPLidar is busy";
+        return;
+    }
+    
+    init_data();
+
+    _address_1 = address_1;
+    _address_2 = address_2;
     precision_ = precision;
     qualityCheck_ = qualityCheck;
+    _standart = standart;
+    _udp = udp;
+    _channelTypeSerial = serial;
 }
 
 bool
-RPLidarDevice::thr_connect(std::string& port, int& baudrate, bool& standart)
+RPLidarDevice::thr_connect(bool& serial, std::string& address_1, int& address_2, bool& standart, bool &udp)
 {
-    channelTypeSerial_ = true;
+
+    if(serial)
+        channel_ = (*createSerialPortChannel(address_1, baudRateLists[address_2]));
+    else
+    {
+        if(udp)
+            channel_ = *createUdpChannel(address_1, address_2);
+        else
+            channel_ = *createTcpChannel(address_1, address_2);
+    }
 
     if (!lidar_drv_)
         lidar_drv_ = *createLidarDriver();
@@ -57,19 +80,17 @@ RPLidarDevice::thr_connect(std::string& port, int& baudrate, bool& standart)
         return SL_RESULT_OPERATION_FAIL == 1;
     }
     
-    channel_ = (*createSerialPortChannel(port, baudRateLists[baudrate]));
     sl_result ans =(lidar_drv_)->connect(channel_);
 
     if (SL_IS_FAIL(ans)) {
-        printf("Error, cannot bind to the specified serial port %s.\n"
-            , port);
+        status_msg_ = "Error, cannot bind to the specified address: " + _address_1;
         is_busy_ = false;
         return false;
     }
     
     ans = lidar_drv_->getDeviceInfo(devinfo_);
     if (SL_IS_FAIL(ans)) {
-        printf("Failed to get device info. code: %x\n", ans);
+        status_msg_ = "Failed to get device info. code: " + std::to_string(ans);
         is_busy_ = false;
         return false;
     }
@@ -82,97 +103,40 @@ RPLidarDevice::thr_connect(std::string& port, int& baudrate, bool& standart)
         is_busy_ = false;
         return false;
     }
-
-    is_connected_ = true;
-    status_msg_ = "Connected to RPLidar";
     
     get_scan_modes();
 
-    if(channelTypeSerial_)
-    {
+    if(serial)
         lidar_drv_->setMotorSpeed();
-    }
     
     if(standart)
-    {
         lidar_drv_->startScanExpress(0,0,0,&currentScanMode);
-    }else
-    {
+    else
         lidar_drv_->startScan(0,1, 0, &currentScanMode);
-    }
 
+    is_connected_ = true;
+    status_msg_ = "Connected to RPLidar on " + _address_1;
     is_busy_ = false;
     return false;
 }
 
 bool
-RPLidarDevice::on_connect(const char* port, int baudrate, bool standart)
+RPLidarDevice::on_connect()
 {
     if (is_connected_ || is_busy_) return true;
-    // status_msg_ = "Connecting to RPLidar";
-
-    port_s = port;
-    _baudrate = baudrate;
-    _standart = standart;
-
-    is_busy_ = true;
-    _lidarThread = std::thread([this] {this->thr_connect(port_s, _baudrate, _standart);});
-    _lidarThread.detach();
-    
-    return true;
-}
-
-bool RPLidarDevice::on_connect_tcp(const char* ip, int port, bool udp = false)
-{
-    if (is_connected_) return true;
-    status_msg_ = "Connecting to RPLidar TCP";
-
-    // printf("Connecting to IP: %s\n", ip);
-    // printf("Connecting to PORT: %d\n", port);
-
-    channelTypeSerial_ = false;
-
-    if(udp)
+    if(_channelTypeSerial)
     {
-        printf("UDP\n");
-        channel_ = *createUdpChannel(ip, port);
+        status_msg_ = "Connecting to RPLidar on PORT: " + _address_1 + " BAUDRATE: " + std::to_string(_address_2);
     }else
     {
-        printf("TCP\n");
-        channel_ = *createTcpChannel(ip, port);
-    }
-
-    if (!lidar_drv_)
-        lidar_drv_ = *createLidarDriver();
-
-    if (!(bool)lidar_drv_) return SL_RESULT_OPERATION_FAIL == 1;
-    
-    sl_result ans =(lidar_drv_)->connect(channel_);
-
-    if (SL_IS_FAIL(ans)) {
-        return false;
-    }
-    // retrieve the devinfo
-    ans = lidar_drv_->getDeviceInfo(devinfo_);
-
-    if (SL_IS_FAIL(ans)) {
-        printf("Failed to get device info. code: %x\n", ans);
-        return false;
-    }
-    ans = lidar_drv_->getMotorInfo(motorinfo_);
-
-    update_status();
-
-    if(!check_device_health())
-    {
-        return false;
-    }
-
-    if (SL_IS_FAIL(ans)) {
-        return false;
+        status_msg_ = "Connecting to RPLidar TCP on IP: " + std::string(_address_1) + " PORT: " + std::to_string(_address_2);
     }
     
-    is_connected_ = true;
+
+    is_busy_ = true;
+    _lidarThread = std::thread([this] {this->thr_connect(_channelTypeSerial, _address_1, _address_2, _standart, _udp);});
+    _lidarThread.detach();
+    
     return true;
 }
 
@@ -180,43 +144,32 @@ void
 RPLidarDevice::on_disconnect()
 {
     status_msg_ = "Disconnecting from RPLidar";
-
-    if (_lidarThread.joinable())
-    {
-        _lidarThread.join();
-        printf("Thread closed\n");
-        //_lidarThread.detach();
-        //_lidarThread.~thread();
-        //std::terminate();
-        is_busy_ = false;
-    }
     
     if (is_connected_) {
         lidar_drv_->stop();
-        if(channelTypeSerial_) lidar_drv_->setMotorSpeed(0);
+        if(_channelTypeSerial) lidar_drv_->setMotorSpeed(0);
     }
     is_connected_ = false;
     delete lidar_drv_;
-    lidar_drv_ = NULL;
+    lidar_drv_ = nullptr;
     delete channel_;
-    channel_ = NULL;
-    channelTypeSerial_ = false;
+    channel_ = nullptr;
     init_data();
 }
 
 void
 RPLidarDevice::update_status()
 {
-     // print out the device serial number, firmware and hardware version number..
      printf("SLAMTEC LIDAR S/N: ");
      serial_number = "";
-     for (int pos = 0; pos < 16 ;++pos) {
-         printf("%02X", devinfo_.serialnum[pos]);
-         serial_number += std::to_string(devinfo_.serialnum[pos]);
+     for (unsigned char pos : devinfo_.serialnum)
+     {
+         printf("%02X", pos);
+         serial_number += std::to_string(pos);
      }
     
      firmware_version = std::to_string(devinfo_.firmware_version>>8) + ".";
-     int minor = devinfo_.firmware_version & 0xFF;
+     const int minor = devinfo_.firmware_version & 0xFF;
      if(minor < 10) firmware_version += "0" + std::to_string(minor);
      else firmware_version += std::to_string(minor);
      hardware_version = std::to_string(devinfo_.hardware_version);
@@ -235,7 +188,7 @@ RPLidarDevice::get_device_status()
 
 void RPLidarDevice::setMotorSpeed(int speed)
 {
-    if(motor_ctrl_support_ != 0 && channelTypeSerial_)
+    if(motor_ctrl_support_ != 0 && _channelTypeSerial)
     {
         lidar_drv_->setMotorSpeed(speed);
         status_msg_ = "Changing motor speed";
@@ -249,12 +202,11 @@ bool  RPLidarDevice::check_device_health(int * errorCode)
 {
     status_msg_ = "Checking device health";
     op_result_ = lidar_drv_->getHealth(healthinfo_);
-    if (SL_IS_OK(op_result_)) { // the macro IS_OK is the preperred way to judge whether the operation is succeed.
+    if (SL_IS_OK(op_result_)) { // the macro IS_OK is the preferred way to judge whether the operation is succeed.
         printf("SLAMTEC Lidar health status : %d\n", healthinfo_.status);
         if (healthinfo_.status == SL_LIDAR_STATUS_ERROR) {
             printf("Error, slamtec lidar internal error detected. Please reboot the device to retry.\n");
-            // enable the following code if you want slamtec lidar to be reboot by software
-            // drv->reset();
+            lidar_drv_->reset();
             return false;
         } else {
             return true;
@@ -268,12 +220,12 @@ bool  RPLidarDevice::check_device_health(int * errorCode)
 
 void RPLidarDevice::get_scan_modes()
 {
-    status_msg_ = "Getting scan modes";
+    // status_msg_ = "Getting scan modes";
     lidar_drv_->getAllSupportedScanModes(scanModes);
     scanModesStr = "";
-    for (int i = 0; i < scanModes.size(); i++)
+    for (auto& scanMode : scanModes)
     {
-        scanModesStr += scanModes[i].scan_mode;
+        scanModesStr += scanMode.scan_mode;
         scanModesStr += " | ";
     }
 
@@ -295,7 +247,7 @@ void RPLidarDevice::get_scan_modes()
 
 void RPLidarDevice::scan(float min_dist, float max_dist)
 {
-    if(is_busy_) return;
+    if(is_busy_ || !is_connected_) return;
     
     sl_lidar_response_measurement_node_hq_t nodes[8192];
     size_t   count = _countof(nodes);
@@ -304,31 +256,27 @@ void RPLidarDevice::scan(float min_dist, float max_dist)
     data_count_ = count;
 
     if (SL_IS_OK(op_result_)) {
-        for (int pos = 0; pos < (int)count ; ++pos) {
+        for (int pos = 0; pos < static_cast<int>(count) ; ++pos) {
 
             bool write = true;
-
             if(qualityCheck_)
             {
                 if(nodes[pos].flag < 2 || nodes[pos].quality < 150)
                 {
-                    // skip not updated
                     write = false;
                 }
             }
 
-            double tempAngle = nodes[pos].angle_z_q14 * 90.f / 16384.f;
-            if (tempAngle > 360.0f || tempAngle < 0.0f)
+            const double tempAngle = nodes[pos].angle_z_q14 * 90.f / 16384.f;
+            if (tempAngle > 360 || tempAngle < 0)
             {
-                // skip bad angles
                 write = false;
             }
-            
-            int halfAngle = floor(tempAngle * precision_);
-            float distance = nodes[pos].dist_mm_q2 / 4.0f;
+
+            const int halfAngle = floor(tempAngle * precision_);
+            const float distance = nodes[pos].dist_mm_q2 / 4.0f;
             if (distance > max_dist || distance < min_dist)
             {
-                // skip bad distances
                 data_[halfAngle].distance = 0;
                 write = false;
             }
@@ -342,6 +290,9 @@ void RPLidarDevice::scan(float min_dist, float max_dist)
             }
             
         }
+
+        // generate random number form 1 to 100
+        _rnd_number = rand() % 100 + 1;
     }
 }
 
@@ -355,6 +306,15 @@ void RPLidarDevice::init_data()
         data_[i].flag = 0;
     }
     scanModesStr = "";
+
+    _address_1 = "";
+    _address_2 = 0;
+    precision_ = 1;
+    qualityCheck_ = false;
+    _standart = false;
+    _udp = false;
+    _channelTypeSerial = true;
+    _rnd_number = 0;
 }
 
 

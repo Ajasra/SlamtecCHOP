@@ -83,6 +83,8 @@ private:
 	int		num_samples_;
 	int		num_channels_ = 4;
 	int		motor_speed_ = 0;
+	double	distance_max_ = 40;
+	double	distance_min_ = 0;
 
 	float precision_ = 2.0f;
 	

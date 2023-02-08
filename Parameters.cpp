@@ -60,18 +60,6 @@ Parameters::evalCoord(const OP_Inputs* input)
 void
 Parameters::setup(OP_ParameterManager* manager)
 {
-	// is default
-	// {
-	// 	OP_NumericParameter isDefault;
-	//
-	// 	isDefault.name = DefaultName;
-	// 	isDefault.label = DefaultLabel;
-	// 	isDefault.page = PageName;
-	// 	isDefault.defaultValues[0] = 1;
-	//
-	// 	OP_ParAppendResult res = manager->appendToggle(isDefault);
-	// 	assert(res == OP_ParAppendResult::Success);
-	// }
 	
 	// is active
 	{
@@ -154,7 +142,7 @@ Parameters::setup(OP_ParameterManager* manager)
 		OP_NumericParameter isUdp;                                  
                                                                     
 		isUdp.name = NetworkTypeName;                                   
-		isUdp.label = NetworkPortLabel;                                 
+		isUdp.label = NetworkTypeLabel;                                 
 		isUdp.page = PageConnectionsName;                           
 		isUdp.defaultValues[0] = 1;                                 
                                                                     
@@ -222,6 +210,26 @@ Parameters::setup(OP_ParameterManager* manager)
 		OP_ParAppendResult res = manager->appendToggle(isQuality);
 		assert(res == OP_ParAppendResult::Success);
 	}
+
+	// Distance
+	{
+		OP_NumericParameter	np;
+	
+		np.name = DistanceName;
+		np.label = DistanceLabel;
+		np.page = PageOutputName;
+		np.minValues[0] = 0;
+		np.maxValues[0] = 40;
+		np.clampMins[0] = true;
+		np.defaultValues[0] = 0;
+
+		np.minValues[1] = 0;
+		np.maxValues[1] = 40;
+		np.clampMins[1] = true;
+		
+		OP_ParAppendResult res = manager->appendFloat(np, 2);
+		assert(res == OP_ParAppendResult::Success);
+	}
 	
 	// Coordinate system
 	{
@@ -241,8 +249,7 @@ Parameters::setup(OP_ParameterManager* manager)
 			"Polar", "Cartesian"
 		};
 		OP_ParAppendResult res = manager->appendMenu(sp, int(Names.size()), Names.data(), Labels.data());
-
-		//OP_ParAppendResult res = manager->appendMenu(sp, int(Names.size()), names, labels);
+		
 		assert(res == OP_ParAppendResult::Success);
 	}
 }
