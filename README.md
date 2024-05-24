@@ -13,7 +13,7 @@ You can add the infoDAT to see lidar information.
 2. Clone the [rplidar sdk](https://github.com/Slamtec/rplidar_sdk)  (currently compiled with 2.1.0)
 3. Open in Visual Studio 2022
 4. Add the rplidar SDK to the project
-5. Follow [this steps](https://github.com/Slamtec/rplidar_sdk/issues/71#issuecomment-1382005055)s to setup right linking
+5. Follow [this steps](https://github.com/Slamtec/rplidar_sdk/issues/71#issuecomment-1382005055) to setup right linking
 6. Build
 
 #### TODO:
