@@ -123,13 +123,13 @@ Parameters::setup(OP_ParameterManager* manager)
 		bw.page = PageConnectionsName;
 		bw.defaultValue = "1000000";
 
-		std::array<const char*, 3> Names =
+		std::array<const char*, 4> Names =
 		{
-			"115200", "256000", "1000000"
+			"115200", "256000", "460800", "1000000"
 		};
-		std::array<const char*, 3> Labels =
+		std::array<const char*, 4> Labels =
 		{
-			"115200", "256000", "1000000"
+			"115200", "256000", "460800", "1000000"
 		};
 		OP_ParAppendResult res = manager->appendMenu(bw, int(Names.size()), Names.data(), Labels.data());
 
