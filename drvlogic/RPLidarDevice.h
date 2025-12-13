@@ -1,6 +1,7 @@
-﻿
+
 #pragma once
 #include "common.h"
+#include <atomic>
 
 class RPLidarDevice {
 
@@ -76,4 +77,5 @@ class RPLidarDevice {
         bool qualityCheck_;
 
         std::thread _lidarThread;
+        std::atomic<bool> _stop_requested{false};
 };

@@ -1,0 +1,9 @@
+﻿  RPLidarDevice.cpp
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(359,19): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(383,40): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(383,33): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+rplidar_driver.lib(sl_serial_channel.obj) : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
+     Creating library C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.lib and object C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.exp
+  BasicGeneratorCHOP.vcxproj -> C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.dll
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.
