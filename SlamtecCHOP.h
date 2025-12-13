@@ -84,7 +84,7 @@ private:
 	int		num_channels_ = 4;
 	int		motor_speed_ = 0;
 	int		startup_frames_ = 0;
-	static constexpr int STARTUP_DELAY_FRAMES = 0;  // Wait ~1 second at 60fps before allowing connection
+	static constexpr int STARTUP_DELAY_FRAMES = 60;  // Wait ~1 second at 60fps before allowing connection
 	double	distance_max_ = 40;
 	double	distance_min_ = 0;
 

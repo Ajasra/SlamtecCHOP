@@ -1,0 +1,10 @@
+﻿  Parameters.cpp
+  SlamtecCHOP.cpp
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\SlamtecCHOP.cpp(250,51): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\SlamtecCHOP.cpp(250,29): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  Generating Code...
+rplidar_driver.lib(sl_serial_channel.obj) : warning LNK4075: ignoring '/EDITANDCONTINUE' due to '/INCREMENTAL:NO' specification
+     Creating library C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.lib and object C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.exp
+  BasicGeneratorCHOP.vcxproj -> C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Debug\SlamtecCHOP.dll
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

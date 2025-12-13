@@ -1,0 +1,16 @@
+﻿  RPLidarDevice.cpp
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(359,19): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(383,40): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\drvlogic\RPLidarDevice.cpp(383,33): warning C4244: 'initializing': conversion from 'double' to 'const int', possible loss of data
+  SlamtecCHOP.cpp
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\SlamtecCHOP.cpp(250,51): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\SlamtecCHOP.cpp(250,29): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
+  Parameters.cpp
+  Generating Code...
+  rplidar_driver.lib(sl_serial_channel.obj) : MSIL .netmodule or module compiled with /GL found; restarting link with /LTCG; add /LTCG to the link command line to improve linker performance
+     Creating library C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Release\SlamtecCHOP.lib and object C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Release\SlamtecCHOP.exp
+  Generating code
+  Finished generating code
+  BasicGeneratorCHOP.vcxproj -> C:\Users\lakeh\Dropbox\WatershedStudio\_RESEARCH AND DEVELOPMENT\Lidar\SlamtecCHOP\x64\Release\SlamtecCHOP.dll
+  'pwsh.exe' is not recognized as an internal or external command,
+  operable program or batch file.

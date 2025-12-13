@@ -21,37 +21,45 @@ TouchDesigner C++ CHOP plugin for reading data from Slamtec Lidar sensors (RPLID
 
 ### Core Components
 
-- **SlamtecCHOP** (`SlamtecCHOP.cpp/.h`): Main TouchDesigner CHOP interface. Handles parameter updates, lidar connection lifecycle, and outputs 4 channels (angle/x, distance/y, quality, flag) with 360 * precision samples.
+- **SlamtecCHOP** (`SlamtecCHOP.cpp/.h`): Main TouchDesigner CHOP interface. Handles parameter updates, lidar connection lifecycle, and outputs 4 channels (angle/x, distance/y, quality, flag) with 360 * precision samples. Includes a 60-frame startup delay to prevent connection during TD initialization.
 
-- **RPLidarDevice** (`drvlogic/RPLidarDevice.cpp/.h`): Lidar driver wrapper. Manages connection via serial or TCP/UDP, scan data acquisition, and device info retrieval. Connection runs in a detached background thread.
+- **RPLidarDevice** (`drvlogic/RPLidarDevice.cpp/.h`): Lidar driver wrapper. Manages connection via serial or TCP/UDP, scan data acquisition, and device info retrieval. Connection runs in a joinable background thread with proper cleanup on disconnect.
 
 - **Parameters** (`Parameters.cpp/.h`): Parameter definitions and evaluation helpers. Defines three parameter pages: "Lidar Settings", "Connection Settings", "Output Settings".
 
 ### Data Flow
 
 1. User enables "Active" parameter in TouchDesigner
-2. `SlamtecCHOP::execute()` calls `RPLidarDevice::on_connect()` which spawns `thr_connect()` on a joinable thread
-3. Background thread establishes serial/network channel, retrieves device info, starts scanning
-4. Each `execute()` frame calls `RPLidarDevice::scan()` which polls `grabScanDataHq()` and populates `data_[]` array
-5. `execute()` reads `data_[]` and outputs to CHOP channels in polar or cartesian coordinates
+2. `SlamtecCHOP::execute()` waits for startup delay (60 frames), then calls `RPLidarDevice::on_connect()`
+3. `on_connect()` spawns `thr_connect()` on a joinable thread
+4. Background thread establishes serial/network channel, retrieves device info, starts scanning
+5. Each `execute()` frame calls `RPLidarDevice::scan()` which polls `grabScanDataHq()` and populates `data_[]` array
+6. `execute()` reads `data_[]` and outputs to CHOP channels in polar or cartesian coordinates
 
 ### Model-Specific Behavior
 
-The SDK behaves differently across lidar models. Detection is based on `devinfo_.model`:
+The SDK behaves differently across lidar models. Known model IDs:
 
-| Model Series | Model ID | Motor Control | Scan Method |
-|--------------|----------|---------------|-------------|
-| A-series (A1/A2/A3) | < 24 | `setMotorSpeed()` required | `startScanExpress()`, fallback to `startScan()` |
-| S-series (S1/S2/S3) | >= 24 | Internal (skip `setMotorSpeed()`) | `startScanExpress()` only |
+| Model | Model ID | Motor Control | Notes |
+|-------|----------|---------------|-------|
+| A1/A2/A3 | < 24 | `setMotorSpeed()` required | Use baudrate 115200 or 256000 |
+| S2 | 113 | Internal (hangs on `setMotorSpeed()`) | Most SDK calls that block will hang |
+| S3 | 129 | Internal | Works with most SDK calls |
 
-**Blocking SDK Calls to Avoid on S-series:**
-- `getMotorInfo()` - hangs indefinitely on S2
-- `setMotorSpeed()` - hangs on S2 (motor is internally controlled)
-- `startScan()` - hangs on S2 (use `startScanExpress()` instead)
+**Blocking SDK Calls - Model Compatibility:**
 
-**Data Retrieval:**
-- Use `grabScanDataHq()` with timeout=0 for polling
-- `getScanDataWithIntervalHq()` returns uninitialized data on some models
+| SDK Call | A-series | S2 (113) | S3 (129) |
+|----------|----------|----------|----------|
+| `getMotorInfo()` | ✓ | ✗ HANGS | ? |
+| `setMotorSpeed()` | ✓ Required | ✗ HANGS | ✓ Works but no effect |
+| `startScan()` | ✓ | ✗ HANGS | ✓ Works but no data |
+| `startScanExpress()` | ✓ | ✓ | ✓ |
+| `grabScanDataHq()` | ✓ | ✓ | ✓ |
+
+**Current Implementation:**
+- Skip `setMotorSpeed()` for S-series (model >= 24) to avoid S2 hang
+- Use `startScanExpress(false, 0, 0, ...)` for all models
+- Fall back to `startScan()` only for A-series if express fails
 
 ### Key Data Structures
 
@@ -67,11 +75,32 @@ Debug logging is enabled via `OutputDebugStringA()`. Use [DebugView](https://lea
 
 Log format: `[timestamp_ms] SlamtecCHOP :: message` or `[timestamp_ms] RPLidarDevice :: message`
 
-## Known Issues / TODOs
+Key debug messages to look for:
+- `Model ID: X (S-series: yes/no)` - confirms model detection
+- `startScanExpress returned: 0` - successful scan start
+- `scan: result=0x0, count=N, write_count=M` - data retrieval stats
 
-- SDK 2.1.0 causes crashes - using older SDK version
-- V4 version rolled back; V3 release is stable
-- C1 support untested
+## Known Issues / Limitations
+
+- **SDK 2.1.0 causes crashes** - using older SDK version
+- **S3 motor noise**: S3 runs louder than some older plugin versions. Attempts to control via scan mode selection (Standard vs Express/DenseBoost) or `setMotorSpeed()` were unsuccessful - motor speed appears to be internally fixed on S-series.
+- **S2 blocking calls**: Many SDK calls hang indefinitely on S2. The current code carefully avoids these.
+- **A-series baudrate**: A1/A2 typically need 115200, A3 needs 256000. Using wrong baudrate causes `getDeviceInfo()` timeout.
+- **C1 support**: Untested
+
+## Failed Experiments (for future reference)
+
+### Motor Speed / Noise Control on S3
+
+Attempted approaches that did NOT reduce S3 motor noise:
+
+1. **Scan mode selection via `startScanExpress(mode)`**: Tried modes 0 (Standard, 62us), 1 (DenseBoost, 31us), etc. No audible difference.
+
+2. **`startScan()` vs `startScanExpress()`**: `startScan()` succeeds on S3 but returns no valid data with `grabScanDataHq()`. Would need different data retrieval method.
+
+3. **`setMotorSpeed()` on S3**: Call succeeds but has no effect on motor RPM. S-series motors are internally controlled.
+
+The motor speed on S-series appears to be firmware-controlled and not adjustable via SDK.
 
 ## Parameter Names (for debugging/referencing)
 
