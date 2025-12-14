@@ -1,1 +1,9 @@
-﻿/Release/
+﻿# Build outputs
+/Release/
+/Debug/
+/x64/
+
+# Visual Studio
+.vs/
+*.user
+*.suo

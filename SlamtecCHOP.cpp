@@ -18,6 +18,17 @@
 #include <cassert>
 #include <stdio.h>
 #include <string>
+#include <chrono>
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
+// Debug timestamp helper
+static long long getTimestampMs() {
+	static auto start = std::chrono::steady_clock::now();
+	auto now = std::chrono::steady_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+}
 
 // These functions are basic C function, which the DLL loader can find
 // much easier than finding a C++ Class.
@@ -150,6 +161,24 @@ SlamtecCHOP::execute(CHOP_Output* output,
 {
 	my_execute_count_++;
 
+	// Startup delay - prevent connection during TD initialization
+	if (startup_frames_ < STARTUP_DELAY_FRAMES) {
+		if (startup_frames_ == 0) {
+			debug_info("=== STARTUP DELAY BEGIN ===");
+		}
+		startup_frames_++;
+		if (startup_frames_ == STARTUP_DELAY_FRAMES) {
+			debug_info("=== STARTUP DELAY COMPLETE ===");
+		}
+		// Fill with -1 during startup
+		for (int i = 0; i < output->numChannels; ++i) {
+			for (int j = 0; j < output->numSamples; ++j) {
+				output->channels[i][j] = -1.0f;
+			}
+		}
+		return;
+	}
+
 	// update parameters
 	is_active_		= Parameters::evalActive(inputs) == 1;
 	is_standart_	= Parameters::evalStandart(inputs) == 1;
@@ -180,6 +209,7 @@ SlamtecCHOP::execute(CHOP_Output* output,
 	
 	if (is_active_ && !lidar->is_connected())
 	{
+		debug_info("Active=true, not connected - attempting connection...");
 		num_samples_ = static_cast<int>(precision_) * 360;
 
 		if(is_network_)
@@ -188,26 +218,37 @@ SlamtecCHOP::execute(CHOP_Output* output,
 			const std::string ip_address = inputs->getParString(IpName);
 			const int ip_port = inputs->getParInt(NetworkPortName);
 
+			debug_info(("Network connection to " + ip_address + ":" + std::to_string(ip_port)).c_str());
 			lidar->setLidar(false, ip_address.c_str(), ip_port, precision_, is_quality_, is_standart_, udp);
 			lidar->on_connect();
 		}else
 		{
 			const std::string com_port = inputs->getParString(PortName);
 			const int baudrate = inputs->getParInt(BaudrateName);
+			const int baudrates[] = {115200, 256000, 460800, 1000000};
+			const int actual_baud = (baudrate >= 0 && baudrate < 4) ? baudrates[baudrate] : 0;
 
+			debug_info(("Serial connection to " + com_port + " @ " + std::to_string(actual_baud)).c_str());
 			lidar->setLidar(true, com_port.c_str(), baudrate, precision_, is_quality_, is_standart_, false);
-			lidar->on_connect();
+			debug_info(("Before on_connect: is_connected=" + std::to_string(lidar->is_connected())).c_str());
+			bool result = lidar->on_connect();
+			debug_info(("on_connect returned: " + std::to_string(result)).c_str());
 		}
+		debug_info("on_connect() returned");
 	}
 	else if (!is_active_ && lidar->is_connected())
 	{
+		debug_info("Disconnecting...");
 		lidar->on_disconnect();
 	}
 
+	debug_info(("Checking scan: active=" + std::to_string(is_active_) + " connected=" + std::to_string(lidar->is_connected())).c_str());
+
 	if(is_active_ && lidar->is_connected())
 	{
-
+		debug_info("Calling scan()...");
 		lidar->scan(distance_min_ * 1000, distance_max_ * 1000);
+		debug_info("scan() returned");
 
 		switch (coord_)
 		{
@@ -244,8 +285,10 @@ SlamtecCHOP::execute(CHOP_Output* output,
 				output->channels[i][j] = -1.0;
 			}
 		}
-		return;	
+		debug_info("execute() complete (no data)");
+		return;
 	}
+	debug_info("execute() complete (with data)");
 	
 }
 
@@ -261,6 +304,7 @@ SlamtecCHOP::init()
 	my_execute_count_ = 0;
 	num_samples_ = 360 * static_cast<int>(precision_);
 	is_was_active_ = false;
+	startup_frames_ = 0;
 	lidar = new RPLidarDevice();
 }
 
@@ -471,13 +515,11 @@ SlamtecCHOP::getInfoDATEntries(int32_t index,
 	}
 }
 
-void 
+void
 SlamtecCHOP::debug_info(const char* message)
 {
-	std::string combined;
-	combined += "SlamtecCHOP :: ";
-	combined += message;
-	combined += "\n";
-	printf(combined.c_str());
-	
+	char buffer[512];
+	snprintf(buffer, sizeof(buffer), "[%lldms] SlamtecCHOP :: %s\n", getTimestampMs(), message);
+	printf(buffer);
+	OutputDebugStringA(buffer);  // Also send to DebugView
 }

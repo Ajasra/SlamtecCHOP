@@ -1,9 +1,26 @@
 ﻿#include "RPLidarDevice.h"
 #include <thread>
+#include <chrono>
+#include <Windows.h>
+
+// Debug timestamp helper for driver layer
+static long long getDriverTimestampMs() {
+	static auto start = std::chrono::steady_clock::now();
+	auto now = std::chrono::steady_clock::now();
+	return std::chrono::duration_cast<std::chrono::milliseconds>(now - start).count();
+}
+
+static void driver_debug(const char* message) {
+	char buffer[512];
+	snprintf(buffer, sizeof(buffer), "[%lldms] RPLidarDevice :: %s\n", getDriverTimestampMs(), message);
+	printf("%s", buffer);
+	OutputDebugStringA(buffer);
+}
 
 static const int baudRateLists[] = {
     115200,
     256000,
+    460800,
     1000000
 };
 
@@ -30,10 +47,10 @@ RPLidarDevice::RPLidarDevice()
 
 RPLidarDevice::~RPLidarDevice()
 {
-    status_msg_ = "RPLidar destructor called";
-    on_disconnect();
-    delete lidar_drv_;
-    lidar_drv_ = nullptr;
+    driver_debug("RPLidarDevice destructor called");
+    on_disconnect();  // This now properly joins the thread
+    // lidar_drv_ is already deleted in on_disconnect()
+    driver_debug("RPLidarDevice destructor complete");
 }
 
 void
@@ -60,7 +77,9 @@ RPLidarDevice::setLidar(bool serial, const char* address_1, int address_2, float
 bool
 RPLidarDevice::thr_connect(bool& serial, std::string& address_1, int& address_2, bool& standart, bool &udp)
 {
+    driver_debug("thr_connect THREAD STARTED");
 
+    driver_debug("Creating channel...");
     if(serial)
         channel_ = (*createSerialPortChannel(address_1, baudRateLists[address_2]));
     else
@@ -70,50 +89,87 @@ RPLidarDevice::thr_connect(bool& serial, std::string& address_1, int& address_2,
         else
             channel_ = *createTcpChannel(address_1, address_2);
     }
+    driver_debug("Channel created");
 
     if (!lidar_drv_)
         lidar_drv_ = *createLidarDriver();
 
     if (!(bool)lidar_drv_)
     {
+        driver_debug("ERROR: Failed to create lidar driver");
         is_busy_ = false;
         return SL_RESULT_OPERATION_FAIL == 1;
     }
-    
+
+    driver_debug("Calling lidar_drv_->connect()...");
     sl_result ans =(lidar_drv_)->connect(channel_);
+    driver_debug("connect() returned");
 
     if (SL_IS_FAIL(ans)) {
+        driver_debug("ERROR: connect() failed");
         status_msg_ = "Error, cannot bind to the specified address: " + _address_1;
         is_busy_ = false;
         return false;
     }
-    
+
+    driver_debug("Getting device info...");
     ans = lidar_drv_->getDeviceInfo(devinfo_);
+    driver_debug(("getDeviceInfo returned: " + std::to_string(ans)).c_str());
     if (SL_IS_FAIL(ans)) {
+        driver_debug("ERROR: getDeviceInfo() failed");
         status_msg_ = "Failed to get device info. code: " + std::to_string(ans);
         is_busy_ = false;
         return false;
     }
-    ans = lidar_drv_->getMotorInfo(motorinfo_);
+    // Skip getMotorInfo for now - it hangs on some models (S2)
+    // TODO: Add timeout or make this optional
+    // driver_debug("Getting motor info...");
+    // ans = lidar_drv_->getMotorInfo(motorinfo_);
+    // driver_debug(("getMotorInfo returned: " + std::to_string(ans)).c_str());
 
     update_status();
 
+    driver_debug("Checking device health...");
     if(!check_device_health())
     {
+        driver_debug("ERROR: Device health check failed");
         is_busy_ = false;
         return false;
     }
-    
+    driver_debug("Device health OK");
+
+    driver_debug("Getting scan modes...");
     get_scan_modes();
+    driver_debug("Scan modes retrieved");
 
-    if(serial)
+    driver_debug("Starting motor/scan...");
+
+    // Check model to determine motor/scan approach
+    // Models 24+ (S1/S2/S3) have internal motor control
+    // Models < 24 (A1/A2/A3) need setMotorSpeed()
+    bool is_s_series = (devinfo_.model >= 24);
+    driver_debug(("Model ID: " + std::to_string(devinfo_.model) + " (S-series: " + (is_s_series ? "yes" : "no") + ")").c_str());
+
+    if (serial && !is_s_series) {
+        // A1/A2/A3 need motor speed set
+        driver_debug("Calling setMotorSpeed() for A-series...");
         lidar_drv_->setMotorSpeed();
-    
-    if(standart)
-        lidar_drv_->startScanExpress(0,0,0,&currentScanMode);
-    else
-        lidar_drv_->startScan(0,1, 0, &currentScanMode);
+        driver_debug("setMotorSpeed() returned");
+    }
 
+    // Try startScanExpress first (works for most models)
+    driver_debug("Calling startScanExpress()...");
+    sl_result scan_result = lidar_drv_->startScanExpress(false, 0, 0, &currentScanMode);
+    driver_debug(("startScanExpress returned: " + std::to_string(scan_result)).c_str());
+
+    // If express scan fails on older models, fall back to legacy scan
+    if (SL_IS_FAIL(scan_result) && !is_s_series) {
+        driver_debug("Express scan failed, trying legacy startScan()...");
+        scan_result = lidar_drv_->startScan(false, true, 0, &currentScanMode);
+        driver_debug(("startScan returned: " + std::to_string(scan_result)).c_str());
+    }
+
+    driver_debug("=== CONNECTION COMPLETE, is_connected_ = true ===");
     is_connected_ = true;
     status_msg_ = "Connected to RPLidar on " + _address_1;
     is_busy_ = false;
@@ -123,7 +179,11 @@ RPLidarDevice::thr_connect(bool& serial, std::string& address_1, int& address_2,
 bool
 RPLidarDevice::on_connect()
 {
-    if (is_connected_ || is_busy_) return true;
+    driver_debug("on_connect() called");
+    if (is_connected_ || is_busy_) {
+        driver_debug("on_connect() early return - already connected or busy");
+        return true;
+    }
     if(_channelTypeSerial)
     {
         status_msg_ = "Connecting to RPLidar on PORT: " + _address_1 + " BAUDRATE: " + std::to_string(_address_2);
@@ -131,30 +191,67 @@ RPLidarDevice::on_connect()
     {
         status_msg_ = "Connecting to RPLidar TCP on IP: " + std::string(_address_1) + " PORT: " + std::to_string(_address_2);
     }
-    
 
+    driver_debug("Spawning connection thread...");
     is_busy_ = true;
+    _stop_requested = false;
+
+    // Join any previous thread first
+    if (_lidarThread.joinable()) {
+        _lidarThread.join();
+    }
+
     _lidarThread = std::thread([this] {this->thr_connect(_channelTypeSerial, _address_1, _address_2, _standart, _udp);});
-    _lidarThread.detach();
-    
+    driver_debug("Thread started (joinable), on_connect() returning");
+
     return true;
 }
 
 void
 RPLidarDevice::on_disconnect()
 {
+    driver_debug("on_disconnect() called");
     status_msg_ = "Disconnecting from RPLidar";
-    
-    if (is_connected_) {
+
+    // Signal thread to stop and wait for it (with timeout)
+    _stop_requested = true;
+    if (_lidarThread.joinable()) {
+        driver_debug("Waiting for connection thread to finish (max 2 sec)...");
+        // Use a timed wait approach - detach if thread doesn't finish in time
+        auto start = std::chrono::steady_clock::now();
+        while (is_busy_) {
+            auto elapsed = std::chrono::steady_clock::now() - start;
+            if (elapsed > std::chrono::seconds(2)) {
+                driver_debug("Thread timeout - detaching");
+                _lidarThread.detach();
+                break;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+        if (_lidarThread.joinable()) {
+            _lidarThread.join();
+            driver_debug("Connection thread finished");
+        }
+    }
+
+    if (is_connected_ && lidar_drv_) {
+        driver_debug("Stopping lidar...");
         lidar_drv_->stop();
-        if(_channelTypeSerial) lidar_drv_->setMotorSpeed(0);
+        // Skip setMotorSpeed(0) - it can hang on S2
     }
     is_connected_ = false;
-    delete lidar_drv_;
-    lidar_drv_ = nullptr;
-    delete channel_;
-    channel_ = nullptr;
+    is_busy_ = false;
+    driver_debug("Deleting lidar_drv_ and channel_...");
+    if (lidar_drv_) {
+        delete lidar_drv_;
+        lidar_drv_ = nullptr;
+    }
+    if (channel_) {
+        delete channel_;
+        channel_ = nullptr;
+    }
     init_data();
+    driver_debug("on_disconnect() complete");
 }
 
 void
@@ -248,14 +345,24 @@ void RPLidarDevice::get_scan_modes()
 void RPLidarDevice::scan(float min_dist, float max_dist)
 {
     if(is_busy_ || !is_connected_) return;
-    
+
     sl_lidar_response_measurement_node_hq_t nodes[8192];
     size_t   count = _countof(nodes);
-    
-    op_result_ = lidar_drv_->getScanDataWithIntervalHq(nodes, count);
+
+    // Try grabScanDataHq instead - it waits for valid data
+    op_result_ = lidar_drv_->grabScanDataHq(nodes, count, 0);  // 0 = don't wait/timeout
+    if (SL_IS_FAIL(op_result_)) {
+        // Fall back to interval method if grab fails
+        count = _countof(nodes);
+        op_result_ = lidar_drv_->getScanDataWithIntervalHq(nodes, count);
+    }
     data_count_ = count;
 
+    static int debug_counter = 0;
+    debug_counter++;
+
     if (SL_IS_OK(op_result_)) {
+        int write_count = 0;
         for (int pos = 0; pos < static_cast<int>(count) ; ++pos) {
 
             bool write = true;
@@ -283,12 +390,27 @@ void RPLidarDevice::scan(float min_dist, float max_dist)
 
             if(write)
             {
+                write_count++;
                 data_[halfAngle].distance = distance;
                 data_[halfAngle].angle = halfAngle;
                 data_[halfAngle].quality = nodes[pos].quality;
                 data_[halfAngle].flag = nodes[pos].flag;
             }
-            
+
+        }
+
+        // Log debug info every 60 frames (~1 second)
+        if (debug_counter % 60 == 0) {
+            char buf[256];
+            snprintf(buf, sizeof(buf), "scan: result=0x%x, count=%d, write_count=%d, min=%.0f, max=%.0f",
+                op_result_, (int)count, write_count, min_dist, max_dist);
+            driver_debug(buf);
+            // Log first non-zero sample
+            if (count > 0) {
+                snprintf(buf, sizeof(buf), "sample[0]: angle_q14=%d, dist_q2=%d, quality=%d, flag=%d",
+                    nodes[0].angle_z_q14, nodes[0].dist_mm_q2, nodes[0].quality, nodes[0].flag);
+                driver_debug(buf);
+            }
         }
 
         // generate random number form 1 to 100
@@ -315,6 +437,7 @@ void RPLidarDevice::init_data()
     _udp = false;
     _channelTypeSerial = true;
     _rnd_number = 0;
+    is_busy_ = false;  // Reset busy flag to allow new connections
 }
 
 

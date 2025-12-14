@@ -62,7 +62,7 @@ constexpr static char DistanceLabel[] = "Distance (m)";
 
 enum class CoordMenuItems
 {
-	Polar, 
+	Polar,
 	Cartesian
 };
 
